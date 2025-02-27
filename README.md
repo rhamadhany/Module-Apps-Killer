@@ -1,4 +1,4 @@
-# app_picker
+# Module-Apps-Killer
 
 A new Flutter project.
 
