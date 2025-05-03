@@ -1,0 +1,2 @@
+/home/rhamadhany/NewDisk/projek-flutter/Module-Apps-Killer/android/app/.cxx/RelWithDebInfo/625z202r/arm64-v8a/CMakeFiles/edit_cache.dir
+/home/rhamadhany/NewDisk/projek-flutter/Module-Apps-Killer/android/app/.cxx/RelWithDebInfo/625z202r/arm64-v8a/CMakeFiles/rebuild_cache.dir
