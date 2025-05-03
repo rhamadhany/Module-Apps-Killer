@@ -1,1 +1,0 @@
-/home/rhamadhany/NewDisk/projek-flutter/Module-Apps-Killer/build/app/intermediates/cxx/RelWithDebInfo/625z202r/obj/x86_64
