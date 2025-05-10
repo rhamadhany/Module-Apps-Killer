@@ -1,64 +1,24 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+
+import 'package:app_picker/service_handler.dart';
 import 'package:get/get.dart';
 
 import 'package:installed_apps/installed_apps.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart';
 
 class MyAppController extends GetxController {
-  final isLoading = false.obs;
-  final isError = false.obs;
-  final isErrorServer = false.obs;
-  final textStatus = ''.obs;
-  final textStatusServer = ''.obs;
-
   @override
-  void onInit() {
-    super.onInit();
-    httpServer();
+  void onReady() {
+    super.onReady();
+    startServer();
   }
 
-  Future<void> requestBackgound() async {
-    PermissionStatus status =
-        await Permission.ignoreBatteryOptimizations.status;
-    if (!status.isGranted) {
-      Get.dialog(
-        barrierDismissible: false,
-        AlertDialog(
-          title: Text(
-            'Background Process',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: Text(
-              'For make sure server is running, this Apps request permission in background. grant permission?'),
-          actions: [
-            ElevatedButton(
-                onPressed: () {
-                  Get.back();
-                },
-                child: Text("No")),
-            ElevatedButton(
-                onPressed: () async {
-                  Get.back();
-                  status = await Permission.ignoreBatteryOptimizations.status;
-                  if (status.isDenied) {
-                    await Permission.ignoreBatteryOptimizations.request();
-                  } else if (status.isPermanentlyDenied) {
-                    await openAppSettings();
-                  }
-                },
-                child: Text("Yes"))
-          ],
-        ),
-      );
-    }
-  }
-
-  Future<void> httpServer() async {
+  Future<void> startServer() async {
     try {
-      isErrorServer.value = false;
+      stopServer();
+
+      ServiceHandler.isErrorServer.value = false;
       Future<shelf.Response> handler(shelf.Request request) async {
         if (request.method == 'GET' && request.url.path == 'apps') {
           final data = await listApps();
@@ -73,16 +33,24 @@ class MyAppController extends GetxController {
         }
       }
 
-      await serve(handler, 'localhost', 12333);
-      textStatusServer.value = 'Running in http://localhost:12333';
+      ServiceHandler.server = await serve(handler, 'localhost', 12333);
+      ServiceHandler.textStatusServer.value = 'Running: http://localhost:12333';
     } catch (e) {
-      isErrorServer.value = true;
-      textStatusServer.value = 'Error: $e';
+      ServiceHandler.isErrorServer.value = true;
+      ServiceHandler.textStatusServer.value = 'Error: $e';
+    }
+  }
+
+  void stopServer() {
+    if (ServiceHandler.server != null) {
+      ServiceHandler.server?.close();
+      ServiceHandler.server = null;
+      ServiceHandler.textStatusServer.value = 'Not Running';
     }
   }
 
   Future<String?> listApps() async {
-    isLoading.value = true;
+    ServiceHandler.isLoading.value = true;
     try {
       final listApp = await InstalledApps.getInstalledApps(false, true);
       int total = 0;
@@ -110,17 +78,17 @@ class MyAppController extends GetxController {
       };
       final encode = jsonEncode(map);
 
-      textStatus.value = '$total Apps Killer';
+      ServiceHandler.textStatus.value = 'successfully get $total apps';
 
-      isError.value = false;
-      isLoading.value = false;
+      ServiceHandler.isError.value = false;
+      ServiceHandler.isLoading.value = false;
       return encode;
     } catch (e) {
-      isError.value = true;
-      textStatus.value = 'Error: $e';
+      ServiceHandler.isError.value = true;
+      ServiceHandler.textStatus.value = 'Error: $e';
     }
 
-    isLoading.value = false;
+    ServiceHandler.isLoading.value = false;
     return null;
   }
 }
